@@ -1,0 +1,59 @@
+body {
+	font-family: 'Arial';
+	margin: 0;
+}
+.page-block {
+	width: 100%;
+	text-align: center;
+}
+.body-block {
+	display: inline-block;
+	width: 1200px;
+	/* border: 1px solid gray; */
+}
+.table-panel {
+	text-align: right;
+	/* border: 1px solid purple; */
+}
+button {
+	cursor: pointer;
+}
+.button-add {
+	font-size: 18px;
+	padding: 8px 16px;
+	margin-left: 16px;
+}
+.table-block {
+	width: 100%;
+	/* border: 1px solid gray; */
+}
+.table-block > tr > th {
+	padding-bottom: 10px;
+}
+.table-block > tr > td {
+	height: 28px;
+	text-align: center;
+}
+.table-block > tr > th:first-child {
+	width: 220px;
+	/* border: 1px solid gray; */
+}
+.table-block > tr > td:not(:last-child) {
+	border: 1px solid gray;
+}
+.table-block > tr > th:last-child,td:last-child {
+	width: 80px;
+	/* border: 1px solid gray; */
+}
+.table-block span {
+	font-weight: normal;
+	font-style: italic;
+	color: gray;
+}
+.table-block input {
+	width: 100%;
+	height: 100%;
+	border: none;
+	font-size: 1em;
+	text-align: center;
+}

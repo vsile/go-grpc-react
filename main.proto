@@ -1,0 +1,35 @@
+/* MAIN PROTO */
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./gis";	//package name in main.pb.go
+
+service MainProto {
+	rpc GetRecords (Empty) returns (ServerReplyList) {}
+	rpc AddRecord (Empty) returns (ServerReply) {}
+	rpc RemoveRecord (ClientRequest) returns (Empty) {}
+	rpc UpdateRecord (ClientRequest) returns (Empty) {}
+}
+
+message ClientRequest {
+	string id = 1;
+	int32 manufacturer_id = 2;
+	string vendor_code = 3;
+	string field = 4;
+	string method = 5;
+}
+
+message ServerReply {
+	string id = 1;
+	int32 manufacturer_id = 2;
+	string vendor_code = 3;
+	google.protobuf.Timestamp created_at = 4;
+	google.protobuf.Timestamp deleted_at = 5;
+}
+
+message ServerReplyList {
+	repeated ServerReply records = 1;
+}
+
+message Empty {}

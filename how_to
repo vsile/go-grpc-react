@@ -1,0 +1,58 @@
+1) Устанавливаем protobuf-компилятор
+	В Linux Mint 19.3 - Ubuntu 18.04 компилятор из репозитория некорректно срабатывал, скрипт выдавал ошибку
+	//sudo apt install protobuf-compiler
+	curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.11.4/protoc-3.11.4-linux-x86_64.zip
+	unzip protoc-3.11.4-linux-x86_64.zip -d $HOME/.local
+	export PATH="$PATH:$HOME/.local/bin"
+
+2) Устанавливаем плагин для компилирования скрипта для сервера
+	go get github.com/golang/protobuf/protoc-gen-go
+	export PATH="$PATH:$(go env GOPATH)/bin"
+
+3) Компилируем файл сериализации .proto
+	cd /my/path
+	~/.local/bin/protoc -I ./ main.proto --go_out=plugins=grpc:./
+В MongoDB данные отдаются в формате bson, а не json, поэтому необходимо добавить соответствующие тэги в структуры.
+	`json:"vendor_code,omitempty"` >> `json:"vendor_code,omitempty" bson:"vendor_code,omitempty"`
+	sed -i -E 's/json:("[^"]+,omitempty")/json:\1 bson:\1/' gis/main.pb.go
+
+4) Запускаем grpc-сервер и web-сервер
+	go run server.go
+	go run web.go
+
+5) Скачиваем плагин для компилирования скрипта для клиента по ссылке и устанавливаем его https://github.com/grpc/grpc-web/releases/download/1.0.7/protoc-gen-grpc-web-1.0.7-linux-x86_64
+	sudo mv protoc-gen-grpc-web-1.0.7-linux-x86_64 /usr/local/bin/protoc-gen-grpc-web
+	sudo chmod +x /usr/local/bin/protoc-gen-grpc-web
+
+6) Компилируем файл сериализации .proto, но уже с js-плагинами
+	~/.local/bin/protoc -I ./ main.proto --js_out=import_style=commonjs:web/src --grpc-web_out=import_style=commonjs,mode=grpcwebtext:web/src
+
+7) Создаем файл index.jsx со ссылками на скомпилированные файлы main_pb.js и main_grpc_web_pb.js и компилируем его babel-компилятором
+	sudo npm install -g babel-cli
+	sudo npm install -g babel-preset-react
+	sudo npm install -g babel-plugin-syntax-object-rest-spread
+	cd /web/src
+	babel --presets /usr/local/lib/node_modules/babel-preset-react --plugins /usr/local/lib/node_modules/babel-plugin-syntax-object-rest-spread index.jsx -d ./
+
+8) Размещаем в директории /my/path/web/src файл package.json с указанием зависимостей и упаковываем полученный index.js.
+	npm install	(для установки зависимостей из package.json)
+	npm install react react-dom
+	sudo npm install -g npx
+	npx webpack index.js
+
+9) Скачиваем Envoy Proxy для взаимодействия клиента с сервером
+	curl -sL 'https://getenvoy.io/gpg' | sudo apt-key add -
+	apt-key fingerprint 6FF974DB
+	sudo add-apt-repository "deb https://dl.bintray.com/tetrate/getenvoy-deb $(lsb_release -cs) stable"
+	sudo apt install getenvoy-envoy
+Если подпись не удалось установить
+	sudo apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true update
+	sudo apt-get -o APT::Get::AllowUnauthenticated=true install getenvoy-envoy
+
+10) Запускаем Envoy Proxy
+	sudo envoy -c my/path/envoyconfig.yaml
+
+11) В процессе программирования удобно объединить babel-трансформацию с webpack-компиляцией
+	babel --presets /usr/local/lib/node_modules/babel-preset-react --plugins /usr/local/lib/node_modules/babel-plugin-syntax-object-rest-spread index.jsx -d ./ && npx webpack index.js
+Также удобно объединять комплияцию proto-файла
+	~/.local/bin/protoc -I ./ main.proto --go_out=plugins=grpc:./ --js_out=import_style=commonjs:web/src --grpc-web_out=import_style=commonjs,mode=grpcwebtext:web/src && sed -i -E 's/json:("[^"]+,omitempty")/json:\1 bson:\1/' gis/main.pb.go

@@ -1,0 +1,13 @@
+{
+  "name": "grpc-web-commonjs-example",
+  "dependencies": {
+    "google-protobuf": "^3.6.1",
+    "grpc-web": "^1.0.7",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.3.11"
+  }
+}
